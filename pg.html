@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Passgen</title>
+</head>
+<body>
+	<center>
+		<p id="hahash">_</p>
+		<input type="password" id="master"><button onclick="masterinp()">Ok</button><br/><br/>
+		<input type="text" id="local"><br/><br/>
+		<input type="text" id="localr"><button onclick="localinp()">Ok</button><br/><br/>
+	</center>
+
+	<script type="text/javascript">
+		function sha256(str) {
+			var buffer = new TextEncoder("utf-8").encode(str);
+			return crypto.subtle.digest("SHA-256", buffer).then(function (hash) {
+				return hex(hash);
+			});
+		}
+		function sha512(str) {
+			var buffer = new TextEncoder("utf-8").encode(str);
+			return crypto.subtle.digest("SHA-512", buffer).then(function (hash) {
+				return hex(hash);
+			});
+		}
+		function hex(buffer) {
+			var hexCodes = [];
+			var view = new DataView(buffer);
+			for (var i = 0; i < view.byteLength; i += 4) {
+				var value = view.getUint32(i)
+				var stringValue = value.toString(16)
+				var padding = '00000000'
+				var paddedValue = (padding + stringValue).slice(-padding.length)
+				hexCodes.push(paddedValue);
+			}
+			var s = hexCodes.join("");
+			return s;
+		}
+		let m="";
+		async function masterinp() {
+			m = await sha512(document.querySelector("#master").value)
+			document.querySelector("#master").value = "";
+			document.querySelector("#hahash").innerHTML = await sha256(m)
+		}
+		async function localinp() {
+			var loc = await sha512(document.querySelector("#local").value)
+			var locr = await sha512(document.querySelector("#localr").value)
+			if(loc != locr){
+				alert("Local keys not identical")
+				return
+			}
+			prompt("", await sha256(m + loc))
+		}
+	</script>
+</body>
+</html>
